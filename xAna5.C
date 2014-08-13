@@ -12,6 +12,7 @@
 #include "ElectronSelections.h"
 #include "MuonSelections.h"
 #include "PhotonSelections.h"
+#include "TCanvas.h"
 
 void xAna5(std::string inputFile_) {
 
@@ -36,9 +37,13 @@ void xAna5(std::string inputFile_) {
   }
   
   TH1D* hM = new TH1D("hM", "Two-lepton invariant mass", 90, 50, 140);
-  TH1D* hM_mu = (TH1D*)hM->Clone("hM_mu");
-  TH1D* hM_el = (TH1D*)hM->Clone("hM_el");
-
+  TH1D* hM_el_Ntp_B = (TH1D*)hM->Clone("hM_el_Ntp_B");
+  TH1D* hM_el_Ntp_E = (TH1D*)hM->Clone("hM_el_Ntp_E");
+  TH1D* hM_el_Ntt = (TH1D*)hM->Clone("hM_el_Ntt");
+  TH1D* hM_el_Ntf_B = (TH1D*)hM->Clone("hM_el_Ntf");
+  TH1D* hM_el_Ntf_E = (TH1D*)hM->Clone("hM_el_Ntf");
+//TH1D* hM_mu = (TH1D*)hM->Clone("hM_mu");
+  
   // event loop
   // for (Long64_t ev = 0; ev < 10000; ev++) {
   for (Long64_t ev = 0; ev < data.GetEntriesFast(); ev++) {
@@ -62,6 +67,7 @@ void xAna5(std::string inputFile_) {
     Float_t* elePt    = data.GetPtrFloat("elePt");
     Float_t* eleEta   = data.GetPtrFloat("eleEta");
     Float_t* elePhi   = data.GetPtrFloat("elePhi");
+    Float_t* eleSCEta = data.GetPtrFloat("eleSCEta");
     Int_t nEle        = data.GetInt("nEle");
 
 
@@ -74,17 +80,29 @@ void xAna5(std::string inputFile_) {
     // two-lepton loop
     for (size_t i = 0; i < acc_ele1.size(); i++) {
       for (size_t j = 0; j < acc_ele2.size(); j++) {
+   	
+        if(acc_ele1[i] == acc_ele2[j])continue;
+        
+        if (fabs(eleSCEta[acc_ele1[i]])>2.5) continue;
+        if (fabs(eleSCEta[acc_ele2[j]])>2.5) continue;
 
-   	if(acc_ele1[i] == acc_ele2[j])continue;
-	
+        if (fabs(eleSCEta[acc_ele1[i]]) < 1.4442 && fabs(eleSCEta[acc_ele2[j]]) < 1.4442 ) {	
 	TLorentzVector ele1, ele2;
 	ele1.SetPtEtaPhiM(elePt[acc_ele1[i]], eleEta[acc_ele1[i]], elePhi[acc_ele1[i]], 0.000511);
 	ele2.SetPtEtaPhiM(elePt[acc_ele2[j]], eleEta[acc_ele2[j]], elePhi[acc_ele2[j]], 0.000511);
-	
-
+    // fill histo
+        TLorentzVector Z = ele1 + ele2;
+        hM_el_Ntp_B->Fill(Z.M());
+	}
+        else if (fabs(eleSCEta[acc_ele1[i]]) > 1.566 && fabs(eleSCEta[acc_ele1[i]]) < 2.5 && fabs(eleSCEta[acc_ele2[j]]) < 1.4442 ){
+        TLorentzVector ele1, ele2;
+        ele1.SetPtEtaPhiM(elePt[acc_ele1[i]], eleEta[acc_ele1[i]], elePhi[acc_ele1[i]], 0.000511);
+        ele2.SetPtEtaPhiM(elePt[acc_ele2[j]], eleEta[acc_ele2[j]], elePhi[acc_ele2[j]], 0.000511);     
 	// fill histo
       TLorentzVector Z = ele1 + ele2;
-      hM_el->Fill(Z.M());
+      hM_el_Ntp_E->Fill(Z.M());
+       }
+        else {continue;}
       } // for2
     }// for1
     // Ntt
@@ -93,26 +111,39 @@ void xAna5(std::string inputFile_) {
     // two-lepton loop
     for (size_t i = 0; i < acc_ele.size(); i++) {                 
       for (size_t j = i + 1; j < acc_ele.size(); j++) {
+
+        if (fabs(eleSCEta[acc_ele[i]])>2.5) continue;
+        if (fabs(eleSCEta[acc_ele[j]])>2.5) continue;
+        if (fabs(eleSCEta[acc_ele[i]]) < 1.4442 && fabs(eleSCEta[acc_ele[j]]) < 1.4442 ){
         TLorentzVector ele1, ele2;
         ele1.SetPtEtaPhiM(elePt[acc_ele[i]], eleEta[acc_ele[i]], elePhi[acc_ele[i]], 0.000511);
         ele2.SetPtEtaPhiM(elePt[acc_ele[j]], eleEta[acc_ele[j]], elePhi[acc_ele[j]], 0.000511);
                         				
          // fill histo
        TLorentzVector Z = ele1 + ele2;
-       hM_el->Fill(Z.M());
+       hM_el_Ntt->Fill(Z.M());
+        }
+        else {continue;}
       }
     }
  
     // Ntf
     vector<int> fail_accepted;
-    vector<int> accepted;    
+        
     
      for (int k = 0; k < nEle; k++) {
 
       if (elePt[k] < 20.) continue;
       if (fabs(eleSCEta[k])>2.5) continue;
-      if (k == accepted(i)) continue;
- 
+   
+     for (size_t i = 0; i < acc_ele1.size(); i++) {
+
+   //  cout <<"i="<< i << endl;
+  //   cout <<"k="<< k << endl;
+   // int tempt = acc_ele1[i];
+   // cout <<"tempt:"<< tempt <<endl;
+      if (k == acc_ele1[i]) continue;
+  }
     fail_accepted.push_back(k);
  }
        
@@ -127,27 +158,91 @@ void xAna5(std::string inputFile_) {
 
       if (acc_ele3[i] == fail_accepted[j]) continue ;
        
+      if (fabs(eleSCEta[acc_ele3[i]])>2.5) continue;
+      if (fabs(eleSCEta[fail_accepted[j]])>2.5) continue;
+      if (fabs(eleSCEta[acc_ele3[i]]) < 1.4442 && fabs(eleSCEta[fail_accepted[j]]) < 1.4442 ){
        TLorentzVector ele1, ele2;
        ele1.SetPtEtaPhiM(elePt[acc_ele3[i]], eleEta[acc_ele3[i]], elePhi[acc_ele3[i]], 0.000511);
        ele2.SetPtEtaPhiM(elePt[fail_accepted[j]], eleEta[fail_accepted[j]], elePhi[fail_accepted[j]], 0.000511);
-        
         // fill histo     
       TLorentzVector Z = ele1 + ele2;
-      hM_el->Fill(Z.M());
+      hM_el_Ntf_B->Fill(Z.M());
+          } 
+    else if (fabs(eleSCEta[acc_ele3[i]]) < 1.4442 && fabs(eleSCEta[fail_accepted[j]]) > 1.566 && fabs (eleSCEta[fail_accepted[j]]) < 2.5 ){
+       TLorentzVector ele1, ele2;
+       ele1.SetPtEtaPhiM(elePt[acc_ele3[i]], eleEta[acc_ele3[i]], elePhi[acc_ele3[i]], 0.000511);
+       ele2.SetPtEtaPhiM(elePt[fail_accepted[j]], eleEta[fail_accepted[j]], elePhi[fail_accepted[j]], 0.000511);
+        // fill histo     
+           TLorentzVector Z = ele1 + ele2;
+           hM_el_Ntf_E->Fill(Z.M());
+           }
+    else {continue;} 
+                   
         }
       }
                            							                                                                  						              
   }// event loop
+   // numbers of entries
+   double Ntt_n   = hM_el_Ntt->GetEntries();
+   double Ntp_B_n = hM_el_Ntp_B->GetEntries();
+   double Ntp_E_n = hM_el_Ntp_E->GetEntries();
+   double Ntf_B_n = hM_el_Ntf_B->GetEntries();
+   double Ntf_E_n = hM_el_Ntf_E->GetEntries();
+
+   cout << "Ntt_n:" << Ntt_n << endl;
+   cout << "Ntp_B_n:" << Ntp_B_n << endl;
+   cout << "Ntp_E_n:" << Ntp_E_n << endl;
+   cout << "Ntf_B_n:" << Ntf_B_n << endl;
+   cout << "Ntt_E_n:" << Ntf_E_n << endl;
+
+   double  efficiency_B = (2*Ntt_n + Ntp_B_n)/(2*Ntt_n + Ntp_B_n + Ntf_B_n);
+   double  efficiency_E = (Ntp_E_n)/(Ntp_E_n + Ntf_E_n);
+
+   cout << "efficiency_B:" << efficiency_B << endl;
+   cout << "efficiency_E:" << efficiency_E << endl;
+
+  TCanvas * Ntp_B = new TCanvas("Ntp_B","Ntp_B",500,500);
+  hM_el_Ntp_B->Draw();
+
+  TCanvas * Ntp_E = new TCanvas("Ntp_E","Ntp_E",500,500);
+  hM_el_Ntp_E->Draw();
   
+  TCanvas * Ntt = new TCanvas("Ntt","Ntt",500,500);
+  hM_el_Ntt->Draw();
+
+  TCanvas * Ntf_B = new TCanvas("Ntf_B","Ntf_B",500,500);
+  hM_el_Ntf_B->Draw();
+
+  TCanvas * Ntf_E = new TCanvas("Ntf_E","Ntf_E",500,500);
+  hM_el_Ntf_E->Draw();
+
   fprintf(stderr, "Processed all events\n");
   TFile* outFile = new TFile("zmass_emu.root","recreate");
 
   gStyle->SetOptFit(11111);
-  hM_el->Fit("gaus");
-  hM_el->Draw();
+  hM_el_Ntp_B->Fit("gaus");
+
+  gStyle->SetOptFit(11111);
+  hM_el_Ntp_E->Fit("gaus");
+
+  gStyle->SetOptFit(11111);
+  hM_el_Ntt->Fit("gaus");
+
+  gStyle->SetOptFit(11111);
+  hM_el_Ntf_B->Fit("gaus");
+
+  gStyle->SetOptFit(11111);
+  hM_el_Ntf_E->Fit("gaus");
+ 
+ // hM_el->Draw();
   
-  hM_el->Write();
-  hM_mu->Write();
+  hM_el_Ntp_B->Write();
+  hM_el_Ntp_E->Write();
+  hM_el_Ntt->Write();
+  hM_el_Ntf_B->Write();
+  hM_el_Ntf_E->Write();
+
+ // hM_mu->Write();
 
   outFile->Write();
 
