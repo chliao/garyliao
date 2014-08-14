@@ -78,11 +78,63 @@ void xAna5(std::string inputFile_) {
     eID2012(data, acc_ele1, 1);       // cut based eID (1: loose WP)
     eID2012(data, acc_ele2, 3);
     // two-lepton loop
-    for (size_t i = 0; i < acc_ele1.size(); i++) {
-      for (size_t j = 0; j < acc_ele2.size(); j++) {
+ //   for (size_t i = 0; i < acc_ele1.size(); i++) {
+ //   for (size_t j = 0; j < acc_ele2.size(); j++) {
    	
-        if(acc_ele1[i] == acc_ele2[j])continue;
-        
+ //       if(acc_ele1[i] == acc_ele2[j])continue;
+  
+
+    vector<int> fail_tight;
+
+     for (int l = 0; l < nEle; l++) {
+
+      if (elePt[l] < 20.) continue;
+      if (fabs(eleSCEta[l])>2.5) continue;
+
+      for (size_t j = 0; j < acc_ele2.size(); j++) {
+
+         if (l == acc_ele2[j]) continue;
+         }
+       fail_tight.push_back(l);
+    }
+    
+
+     for (size_t i = 0; i < acc_ele1.size(); i++){
+       for (size_t m = 0; m < fail_tight.size(); m++) {
+         for (size_t j = 0; j < acc_ele2.size(); j++) {
+         
+         if (fabs(eleSCEta[acc_ele1[i]])>2.5) continue;
+         if (fabs(eleSCEta[acc_ele2[j]])>2.5) continue;
+         if (fabs(eleSCEta[fail_tight[m]])>2.5) continue;
+
+         if (acc_ele1[i] == fail_tight[m]) {
+
+        if (fabs(eleSCEta[acc_ele1[i]]) < 1.4442 && fabs(eleSCEta[acc_ele2[j]]) < 1.4442 ) {    
+        TLorentzVector ele1, ele2;
+        ele1.SetPtEtaPhiM(elePt[acc_ele1[i]], eleEta[acc_ele1[i]], elePhi[acc_ele1[i]], 0.000511);
+        ele2.SetPtEtaPhiM(elePt[acc_ele2[j]], eleEta[acc_ele2[j]], elePhi[acc_ele2[j]], 0.000511);
+    // fill histo
+             TLorentzVector Z = ele1 + ele2;
+           hM_el_Ntp_B->Fill(Z.M());
+                             }
+      else if (fabs(eleSCEta[acc_ele1[i]]) > 1.566 && fabs(eleSCEta[acc_ele1[i]]) < 2.5 && fabs(eleSCEta[acc_ele2[j]]) < 1.4442 ){
+        TLorentzVector ele1, ele2;
+        ele1.SetPtEtaPhiM(elePt[acc_ele1[i]], eleEta[acc_ele1[i]], elePhi[acc_ele1[i]], 0.000511);
+        ele2.SetPtEtaPhiM(elePt[acc_ele2[j]], eleEta[acc_ele2[j]], elePhi[acc_ele2[j]], 0.000511);     
+    // fill histo
+        TLorentzVector Z = ele1 + ele2;
+           hM_el_Ntp_E->Fill(Z.M());
+            }
+             else {continue;}
+         } 
+             else {continue;}
+      }
+    }
+  }
+
+    
+
+/*     
         if (fabs(eleSCEta[acc_ele1[i]])>2.5) continue;
         if (fabs(eleSCEta[acc_ele2[j]])>2.5) continue;
 
@@ -105,6 +157,7 @@ void xAna5(std::string inputFile_) {
         else {continue;}
       } // for2
     }// for1
+*/
     // Ntt
     vector<int> acc_ele;
     eID2012(data, acc_ele, 3);       // cut based eID (1: loose WP)
@@ -200,6 +253,17 @@ void xAna5(std::string inputFile_) {
 
    cout << "efficiency_B:" << efficiency_B << endl;
    cout << "efficiency_E:" << efficiency_E << endl;
+
+   FILE *fout;
+   fout = fopen("efficiency","w+t");
+   fprintf(fout,"Ntt_n:%f\n", Ntt_n);
+   fprintf(fout,"Ntp_B_n:%f\n", Ntp_B_n);
+   fprintf(fout,"Ntp_E_n:%f\n", Ntp_E_n);
+   fprintf(fout,"Ntf_B_n:%f\n", Ntf_B_n);
+   fprintf(fout,"Ntf_E_n:%f\n", Ntf_E_n);
+   fprintf(fout,"efficiency_B = (2*Ntt_n + Ntp_B_n)/(2*Ntt_n + Ntp_B_n + Ntf_B_n):%f\n", efficiency_B);
+   fprintf(fout,"efficiency_E = (Ntp_E_n)/(Ntp_E_n + Ntf_E_n):%f\n", efficiency_E);
+   fclose(fout);
 
   TCanvas * Ntp_B = new TCanvas("Ntp_B","Ntp_B",500,500);
   hM_el_Ntp_B->Draw();
