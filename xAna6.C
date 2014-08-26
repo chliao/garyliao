@@ -76,17 +76,25 @@ void xAna6(std::string inputFile_) {
     vector<int> acc_ele1;
     vector<int> acc_ele2;
     vector<int> acc_ele5;
+    bool find = true;
     eID2012(data, acc_ele1, 1);       // cut based eID (1: loose WP)
     eID2012(data, acc_ele2, 3);
     // two-lepton loop
     for (size_t i = 0; i < acc_ele1.size(); i++) {
     for (size_t j = 0; j < acc_ele2.size(); j++) {
     
-	
-        if(acc_ele1[i] == acc_ele2[j]) {continue;}
-        else{acc_ele5.push_back(acc_ele1[i]);}
+//	cout << "ii=" << i << endl;
+//      cout << "j=" << j << endl; 
+        if (acc_ele1[i] == acc_ele2[j]) {/*cout<<"break"<< endl;*/ find=false; break;}
+        else {find=true;}
       
      }    
+//      cout << "i=" << i << endl;
+//      cout << "push_back" << endl; 
+      if (find) { /*cout << "find=" << find << endl;
+                       cout << "i=" << i << endl;
+                       cout << "push_back" << endl;*/
+                       acc_ele5.push_back(acc_ele1[i]);}
    }
  
 
@@ -189,7 +197,7 @@ void xAna6(std::string inputFile_) {
  
     // Ntf
     vector<int> fail_accepted;
-        
+    bool found = false ;    
     
      for (int k = 0; k < nEle; k++) {
 
@@ -198,13 +206,10 @@ void xAna6(std::string inputFile_) {
    
      for (size_t i = 0; i < acc_ele1.size(); i++) {
 
-   //  cout <<"i="<< i << endl;
-  //   cout <<"k="<< k << endl;
-   // int tempt = acc_ele1[i];
-   // cout <<"tempt:"<< tempt <<endl;
-      if (k == acc_ele1[i]) continue;
-  }
-    fail_accepted.push_back(k);
+      if (k == acc_ele1[i]) {found = true; break;}
+      else {found = false ;}   
+   }
+      if (!found) { fail_accepted.push_back(k); }
  }
        
  
