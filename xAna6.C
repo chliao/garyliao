@@ -190,16 +190,26 @@ void xAna6(std::string inputFile_) {
        TLorentzVector Z = ele1 + ele2;
        hM_el_Ntt_B->Fill(Z.M());
         }
-        else if(fabs(eleSCEta[acc_ele[i]]) < 1.4442 && fabs(eleSCEta[acc_ele[j]]) > 1.566 && fabs(eleSCEta[acc_ele[j]]) < 2.5){
+      }
+    }
+
+    vector<int> acc_ele6;
+    eID2012(data, acc_ele6, 3);
+    for (size_t i = 0; i < acc_ele.size(); i++) {
+      for (size_t j = 0 ; j < acc_ele6.size(); j++) {
+
+        if (fabs(eleSCEta[acc_ele[i]])>2.5) continue;
+        if (fabs(eleSCEta[acc_ele6[j]])>2.5) continue;
+        if (acc_ele[i] == acc_ele6[j]) continue;
+        if(fabs(eleSCEta[acc_ele[i]]) < 1.4442 && fabs(eleSCEta[acc_ele6[j]]) > 1.566 && fabs(eleSCEta[acc_ele6[j]]) < 2.5){
         TLorentzVector ele1, ele2;
         ele1.SetPtEtaPhiM(elePt[acc_ele[i]], eleEta[acc_ele[i]], elePhi[acc_ele[i]], 0.000511);
-        ele2.SetPtEtaPhiM(elePt[acc_ele[j]], eleEta[acc_ele[j]], elePhi[acc_ele[j]], 0.000511);
+        ele2.SetPtEtaPhiM(elePt[acc_ele6[j]], eleEta[acc_ele6[j]], elePhi[acc_ele6[j]], 0.000511);
 
           // fill histo
        TLorentzVector Z = ele1 + ele2;
        hM_el_Ntt_E->Fill(Z.M());
         }
-        else {continue;}
       }
     }
  
