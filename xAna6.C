@@ -39,7 +39,8 @@ void xAna6(std::string inputFile_) {
   TH1D* hM = new TH1D("hM", "Two-lepton invariant mass", 90, 50, 140);
   TH1D* hM_el_Ntp_B = (TH1D*)hM->Clone("hM_el_Ntp_B");
   TH1D* hM_el_Ntp_E = (TH1D*)hM->Clone("hM_el_Ntp_E");
-  TH1D* hM_el_Ntt = (TH1D*)hM->Clone("hM_el_Ntt");
+  TH1D* hM_el_Ntt_B = (TH1D*)hM->Clone("hM_el_Ntt_B");
+  TH1D* hM_el_Ntt_E = (TH1D*)hM->Clone("hM_el_Ntt_E");
   TH1D* hM_el_Ntf_B = (TH1D*)hM->Clone("hM_el_Ntf");
   TH1D* hM_el_Ntf_E = (TH1D*)hM->Clone("hM_el_Ntf");
 //TH1D* hM_mu = (TH1D*)hM->Clone("hM_mu");
@@ -82,15 +83,13 @@ void xAna6(std::string inputFile_) {
     // two-lepton loop
     for (size_t i = 0; i < acc_ele1.size(); i++) {
     for (size_t j = 0; j < acc_ele2.size(); j++) {
-    
 //	cout << "ii=" << i << endl;
 //      cout << "j=" << j << endl; 
         if (acc_ele1[i] == acc_ele2[j]) {/*cout<<"break"<< endl;*/ find=false; break;}
         else {find=true;}
       
      }    
-//      cout << "i=" << i << endl;
-//      cout << "push_back" << endl; 
+ 
       if (find) { /*cout << "find=" << find << endl;
                        cout << "i=" << i << endl;
                        cout << "push_back" << endl;*/
@@ -189,7 +188,16 @@ void xAna6(std::string inputFile_) {
                         				
          // fill histo
        TLorentzVector Z = ele1 + ele2;
-       hM_el_Ntt->Fill(Z.M());
+       hM_el_Ntt_B->Fill(Z.M());
+        }
+        else if(fabs(eleSCEta[acc_ele[i]]) < 1.4442 && fabs(eleSCEta[acc_ele[j]]) > 1.566 && fabs(eleSCEta[acc_ele[j]]) < 2.5){
+        TLorentzVector ele1, ele2;
+        ele1.SetPtEtaPhiM(elePt[acc_ele[i]], eleEta[acc_ele[i]], elePhi[acc_ele[i]], 0.000511);
+        ele2.SetPtEtaPhiM(elePt[acc_ele[j]], eleEta[acc_ele[j]], elePhi[acc_ele[j]], 0.000511);
+
+          // fill histo
+       TLorentzVector Z = ele1 + ele2;
+       hM_el_Ntt_E->Fill(Z.M());
         }
         else {continue;}
       }
@@ -206,10 +214,14 @@ void xAna6(std::string inputFile_) {
    
      for (size_t i = 0; i < acc_ele1.size(); i++) {
 
-      if (k == acc_ele1[i]) {found = true; break;}
-      else {found = false ;}   
+    // cout<<"kk="<<k<<endl;
+    // cout<<"i="<<i<<endl;
+
+      if (k == acc_ele1[i]) {/*cout<<"break"<<endl;*/ found = true; break;}
+      else {found = false ;/* cout<<"found1="<<found<<endl;*/}   
    }
-      if (!found) { fail_accepted.push_back(k); }
+    // cout<<"found2="<<found<<endl;
+      if (!found) { /*cout<<"k="<<k<<endl; cout<<"push_back"<<endl;*/ fail_accepted.push_back(k); }
  }
        
  
@@ -221,7 +233,7 @@ void xAna6(std::string inputFile_) {
     for (size_t i = 0; i < acc_ele3.size(); i++) {                       							                
      for (size_t j = 0; j < fail_accepted.size(); j++) {
 
-      if (acc_ele3[i] == fail_accepted[j]) continue ;
+   //   if (acc_ele3[i] == fail_accepted[j]) continue ;
        
       if (fabs(eleSCEta[acc_ele3[i]])>2.5) continue;
       if (fabs(eleSCEta[fail_accepted[j]])>2.5) continue;
@@ -248,33 +260,36 @@ void xAna6(std::string inputFile_) {
                            							                                                                  						              
   }// event loop
    // numbers of entries
-   double Ntt_n   = hM_el_Ntt->GetEntries();
+   double Ntt_B_n = hM_el_Ntt_B->GetEntries();
+   double Ntt_E_n = hM_el_Ntt_E->GetEntries();
    double Ntp_B_n = hM_el_Ntp_B->GetEntries();
    double Ntp_E_n = hM_el_Ntp_E->GetEntries();
    double Ntf_B_n = hM_el_Ntf_B->GetEntries();
    double Ntf_E_n = hM_el_Ntf_E->GetEntries();
 
-   cout << "Ntt_n:" << Ntt_n << endl;
+   cout << "Ntt_B_n:" << Ntt_B_n << endl;
+   cout << "Ntt_E_n:" << Ntt_E_n << endl;
    cout << "Ntp_B_n:" << Ntp_B_n << endl;
    cout << "Ntp_E_n:" << Ntp_E_n << endl;
    cout << "Ntf_B_n:" << Ntf_B_n << endl;
-   cout << "Ntt_E_n:" << Ntf_E_n << endl;
+   cout << "Ntf_E_n:" << Ntf_E_n << endl;
 
-   double  efficiency_B = (2*Ntt_n + Ntp_B_n)/(2*Ntt_n + Ntp_B_n + Ntf_B_n);
-   double  efficiency_E = (Ntp_E_n)/(Ntp_E_n + Ntf_E_n);
+   double  efficiency_B = (2*Ntt_B_n + Ntp_B_n)/(2*Ntt_B_n + Ntp_B_n + Ntf_B_n);
+   double  efficiency_E = (Ntt_E_n + Ntp_E_n)/(Ntt_E_n + Ntp_E_n + Ntf_E_n);
 
    cout << "efficiency_B:" << efficiency_B << endl;
    cout << "efficiency_E:" << efficiency_E << endl;
 
    FILE *fout;
    fout = fopen("efficiency","w+t");
-   fprintf(fout,"Ntt_n:%f\n", Ntt_n);
+   fprintf(fout,"Ntt_B_n:%f\n", Ntt_B_n);
+   fprintf(fout,"Ntt_E_n:%f\n", Ntt_E_n);
    fprintf(fout,"Ntp_B_n:%f\n", Ntp_B_n);
    fprintf(fout,"Ntp_E_n:%f\n", Ntp_E_n);
    fprintf(fout,"Ntf_B_n:%f\n", Ntf_B_n);
    fprintf(fout,"Ntf_E_n:%f\n", Ntf_E_n);
-   fprintf(fout,"efficiency_B = (2*Ntt_n + Ntp_B_n)/(2*Ntt_n + Ntp_B_n + Ntf_B_n):%f\n", efficiency_B);
-   fprintf(fout,"efficiency_E = (Ntp_E_n)/(Ntp_E_n + Ntf_E_n):%f\n", efficiency_E);
+   fprintf(fout,"efficiency_B = (2*Ntt_B_n + Ntp_B_n)/(2*Ntt_B_n + Ntp_B_n + Ntf_B_n):%f\n", efficiency_B);
+   fprintf(fout,"efficiency_E = (Ntt_E_n + Ntp_E_n)/(Ntt_E_n + Ntp_E_n + Ntf_E_n):%f\n", efficiency_E);
    fclose(fout);
 
   TCanvas * Ntp_B = new TCanvas("Ntp_B","Ntp_B",500,500);
@@ -283,8 +298,11 @@ void xAna6(std::string inputFile_) {
   TCanvas * Ntp_E = new TCanvas("Ntp_E","Ntp_E",500,500);
   hM_el_Ntp_E->Draw();
   
-  TCanvas * Ntt = new TCanvas("Ntt","Ntt",500,500);
-  hM_el_Ntt->Draw();
+  TCanvas * Ntt_B = new TCanvas("Ntt_B","Ntt_B",500,500);
+  hM_el_Ntt_B->Draw();
+
+  TCanvas * Ntt_E = new TCanvas("Ntt_E","Ntt_E",500,500);
+  hM_el_Ntt_E->Draw();
 
   TCanvas * Ntf_B = new TCanvas("Ntf_B","Ntf_B",500,500);
   hM_el_Ntf_B->Draw();
@@ -302,7 +320,10 @@ void xAna6(std::string inputFile_) {
   hM_el_Ntp_E->Fit("gaus");
 
   gStyle->SetOptFit(11111);
-  hM_el_Ntt->Fit("gaus");
+  hM_el_Ntt_B->Fit("gaus");
+
+  gStyle->SetOptFit(11111);
+  hM_el_Ntt_E->Fit("gaus");
 
   gStyle->SetOptFit(11111);
   hM_el_Ntf_B->Fit("gaus");
@@ -314,7 +335,8 @@ void xAna6(std::string inputFile_) {
   
   hM_el_Ntp_B->Write();
   hM_el_Ntp_E->Write();
-  hM_el_Ntt->Write();
+  hM_el_Ntt_B->Write();
+  hM_el_Ntt_E->Write();
   hM_el_Ntf_B->Write();
   hM_el_Ntf_E->Write();
 
